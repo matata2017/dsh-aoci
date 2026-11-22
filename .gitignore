@@ -1,0 +1,7 @@
+# Runtime diagnostics from the live DSH host
+aoci-debug.log
+
+# Test artifacts
+test/mcp-entry-result.json
+test/maintain.json
+test/mcp-update-result.json

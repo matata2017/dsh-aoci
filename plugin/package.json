@@ -1,0 +1,23 @@
+{
+  "name": "@local/dsh-aoci",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "AOCI-CODE integration for DeepSeek Harness: nine MCP tools, AOCI CLI, pre-write hook and compaction handoff.",
+  "exports": {
+    ".": "./index.js"
+  },
+  "files": [
+    "index.js",
+    "cordis.patch.yml",
+    "bin/aoci.exe",
+    "README.md",
+    "docs",
+    "icon.svg"
+  ],
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  }
+}
