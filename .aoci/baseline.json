@@ -1,7 +1,7 @@
 {
   "version": 1,
   "created_at": "2026-11-23T01:29:47Z",
-  "updated_at": "2026-11-23T01:29:47Z",
+  "updated_at": "2026-11-24T04:39:14Z",
   "files": {
     ".gitattributes": {
       "role": "index",
@@ -11,9 +11,9 @@
     },
     ".gitignore": {
       "role": "index",
-      "sha256": "41eeb4a09c0f2dbec863e63fc3c118baa19acb609cb6f696bb1498dcc47c6b57",
-      "size": 108,
-      "normalized_sha256": "41eeb4a09c0f2dbec863e63fc3c118baa19acb609cb6f696bb1498dcc47c6b57"
+      "sha256": "5f7460f4a9db8de4cce64dbfbdd7b64bf0daec5eecde5dad62576196033d68dc",
+      "size": 272,
+      "normalized_sha256": "02d7244214d62782157dfb9c8dc0f72be4b72189c0417ba6f83a00837a4d08ea"
     },
     "AGENTS.md": {
       "role": "index",
@@ -21,11 +21,23 @@
       "size": 14180,
       "normalized_sha256": "ab7266ce23dc082964a0e0dd0ac755ec53497e2eb217607b3a04ca317627be3e"
     },
+    "INSTALL.md": {
+      "role": "index",
+      "sha256": "da059cff18d2b86784b29bc57caa20b1d1a150d9344bcbb8b99550c874467e2c",
+      "size": 1661,
+      "normalized_sha256": "da059cff18d2b86784b29bc57caa20b1d1a150d9344bcbb8b99550c874467e2c"
+    },
+    "README.md": {
+      "role": "index",
+      "sha256": "96b61567599d67a1c52a7615aa7465b2b0701146d3f786a515b16f89030b77e4",
+      "size": 2732,
+      "normalized_sha256": "96b61567599d67a1c52a7615aa7465b2b0701146d3f786a515b16f89030b77e4"
+    },
     "aoci.code.txt": {
       "role": "index",
-      "sha256": "12cbc237b863041b3ab7b6c6330091964cb014a20e624ec1f88de6056aed56c2",
-      "size": 21,
-      "normalized_sha256": "12cbc237b863041b3ab7b6c6330091964cb014a20e624ec1f88de6056aed56c2"
+      "sha256": "00878032fcefcee5b04499094b8bf937b0f2db7ddac92de2f2d8cd43d2ba5136",
+      "size": 3599,
+      "normalized_sha256": "00878032fcefcee5b04499094b8bf937b0f2db7ddac92de2f2d8cd43d2ba5136"
     },
     "aoci.meta.txt": {
       "role": "index",
@@ -38,6 +50,72 @@
       "sha256": "6224fef874fc8a219e9fc28f614de3574a504e503e070b746c58b3d6805128fc",
       "size": 298,
       "normalized_sha256": "6224fef874fc8a219e9fc28f614de3574a504e503e070b746c58b3d6805128fc"
+    },
+    "plugin/README.md": {
+      "role": "index",
+      "sha256": "731618b464f292b39886c70261b96ad9810bcb422c118c19ca72f829101c067b",
+      "size": 2739,
+      "normalized_sha256": "731618b464f292b39886c70261b96ad9810bcb422c118c19ca72f829101c067b"
+    },
+    "plugin/bin/BUILD.txt": {
+      "role": "index",
+      "sha256": "26a056f0825f507bf291e37e47d0a3481cc0ff2893b72d6fc94b1d8307b327fa",
+      "size": 87,
+      "normalized_sha256": "26a056f0825f507bf291e37e47d0a3481cc0ff2893b72d6fc94b1d8307b327fa"
+    },
+    "plugin/cordis.patch.yml": {
+      "role": "index",
+      "sha256": "06531366bb2bcfcac63be161ab64c9b0623b3645a7b56f168492447af020f92d",
+      "size": 713,
+      "normalized_sha256": "06531366bb2bcfcac63be161ab64c9b0623b3645a7b56f168492447af020f92d"
+    },
+    "plugin/docs/DETAIL.md": {
+      "role": "index",
+      "sha256": "ac7b14325c2622028599532f28e3601d4f4eae10408dab2d3b66ed95e3454a24",
+      "size": 1493,
+      "normalized_sha256": "ac7b14325c2622028599532f28e3601d4f4eae10408dab2d3b66ed95e3454a24"
+    },
+    "plugin/icon.svg": {
+      "role": "observe",
+      "sha256": "424513a084040d113e379429bf40f8805a140b1234be3a9f1d125308c7287805",
+      "size": 291,
+      "normalized_sha256": "424513a084040d113e379429bf40f8805a140b1234be3a9f1d125308c7287805"
+    },
+    "plugin/index.js": {
+      "role": "index",
+      "sha256": "f6a583477752fc8bd1b407db748fda43ffe0e2fea557d876d4c3f669ed9e5918",
+      "size": 20632,
+      "normalized_sha256": "f6a583477752fc8bd1b407db748fda43ffe0e2fea557d876d4c3f669ed9e5918"
+    },
+    "plugin/package.json": {
+      "role": "index",
+      "sha256": "75e2417b5a89b5efd91144c22d201c494fef1c3a90605c4bfc1bf3621a697287",
+      "size": 460,
+      "normalized_sha256": "75e2417b5a89b5efd91144c22d201c494fef1c3a90605c4bfc1bf3621a697287"
+    },
+    "test/mcp.test.mjs": {
+      "role": "index",
+      "sha256": "500cebeaa417d3c703874814e234c85f672eaa4a13f2c8d60a1d9a3ce608c761",
+      "size": 3347,
+      "normalized_sha256": "500cebeaa417d3c703874814e234c85f672eaa4a13f2c8d60a1d9a3ce608c761"
+    },
+    "test/multi-project.test.mjs": {
+      "role": "index",
+      "sha256": "122ccd055b857a99e8f1a871e03930dc802b10a4e9a2063e652590fa507a6d19",
+      "size": 7167,
+      "normalized_sha256": "122ccd055b857a99e8f1a871e03930dc802b10a4e9a2063e652590fa507a6d19"
+    },
+    "test/plugin.test.mjs": {
+      "role": "index",
+      "sha256": "28d75ffb38aae20944913aa5c32fed4f6af944beec2ae6b84bddaaa71df2e218",
+      "size": 6089,
+      "normalized_sha256": "28d75ffb38aae20944913aa5c32fed4f6af944beec2ae6b84bddaaa71df2e218"
+    },
+    "test/run-mcp-entry.mjs": {
+      "role": "index",
+      "sha256": "c7c856b4fa43a1bfff28ab3de6693cad817bb138d49f5c56fb2e88e4f79eecbc",
+      "size": 2528,
+      "normalized_sha256": "c7c856b4fa43a1bfff28ab3de6693cad817bb138d49f5c56fb2e88e4f79eecbc"
     }
   },
   "managed_scope": {

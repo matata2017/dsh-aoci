@@ -1,19 +1,26 @@
 import assert from 'node:assert/strict'
-import { cpSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { cpSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
 import { test } from 'node:test'
 import { fileURLToPath } from 'node:url'
 import { apply } from '../plugin/index.js'
 
 const SOURCE_REPO = process.env.AOCI_TEST_REPO ?? fileURLToPath(new URL('..', import.meta.url))
-const HOOK_REPO = 'D:/aoci-hook-test'
+const TEMP = realpathSync(mkdtempSync(join(tmpdir(), 'dsh-aoci-test-')))
+const HOOK_REPO = join(TEMP, 'hook')
+process.once('exit', () => rmSync(TEMP, { recursive: true, force: true }))
 
 function prepareHookRepo() {
-  rmSync(HOOK_REPO, { recursive: true, force: true })
   mkdirSync(HOOK_REPO, { recursive: true })
   for (const name of ['aoci.txt', 'aoci.meta.txt', 'aoci.code.txt', '.gitattributes']) {
     cpSync(`${SOURCE_REPO}/${name}`, `${HOOK_REPO}/${name}`)
   }
-  cpSync(`${SOURCE_REPO}/.aoci`, `${HOOK_REPO}/.aoci`, { recursive: true })
+  mkdirSync(join(HOOK_REPO, '.aoci'))
+  for (const name of ['config.json', 'baseline.json']) {
+    cpSync(join(SOURCE_REPO, '.aoci', name), join(HOOK_REPO, '.aoci', name))
+  }
+  writeFileSync(join(HOOK_REPO, 'aoci.code.txt'), '#AOCI-CODE-VOLUME: 1\n===/<repository>/===\n.gitattributes[FC5T]: F:Configure Git file attributes | R:- | A:- | S:-\n')
   const configPath = `${HOOK_REPO}/.aoci/config.json`
   const config = JSON.parse(readFileSync(configPath, 'utf8'))
   config.hook_strict = true

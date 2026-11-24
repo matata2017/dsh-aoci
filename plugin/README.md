@@ -12,12 +12,24 @@ It exposes AOCI-CODE through four surfaces:
 ## Install
 
 ```bash
-plugin_manager install_bundle "D:/aoci-dsh/plugin"
+plugin_manager install_bundle "D:/work/huanghao/aoci-code/plugin"
 ```
 
-The default `repoRoot` is `D:/aoci-code`; edit `cordis.patch.yml` before installing, or change the `repoRoot` row config in the Plugins page, to point at your own repository.
+Edit the plugin's `config` in `cordis.patch.yml` or in the Plugins page. A single `repoRoot` keeps the existing `mcp__aoci__*` tools. To switch between projects within one session, configure `projects`:
 
-The repository must be initialized for AOCI (`aoci init` and `aoci scan`, or pre-existing `aoci.txt` / `.aoci/`).
+```yaml
+projects:
+  - projectId: loan-information-boot
+    repoRoot: 'E:/work/huanghao/loan-information-boot'
+  - projectId: pinrong-online
+    repoRoot: 'E:/work/huanghao/pinrong-online'
+```
+
+1. Call `aoci_project` with `{}` to list projects, or with `{"projectId":"pinrong-online"}` to select one in the current session. Selection resets when the plugin reloads.
+2. Use `aoci` for status, checks, and `update-entry --preview`. The plugin supplies `--repo` for the selected project.
+3. Use the selected MCP prefix for AOCI reads and writes, for example `mcp__aoci_pinrong_online__aoci_maintain` followed by `mcp__aoci_pinrong_online__aoci_update_entry`. Finish the current batch before switching. Start a new AOCI flow on the next project and keep cursors, receipts, and batches with their original project.
+
+Each project has its own MCP process and index. Roots must be absolute and distinct. Optional `serverKey` overrides must use the `aoci_` prefix, lowercase letters, digits and single underscores, with a maximum length of 32 characters. Projects missing `.aoci/`, `aoci.txt`, `aoci.meta.txt` or `aoci.code.txt` appear in the list without an MCP prefix. Reload after initializing such a repository.
 
 ## Verify
 

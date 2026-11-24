@@ -2,8 +2,13 @@
     - id: aoci
       name: '@local/dsh-aoci'
       config:
-        # Repository AOCI should govern. Change this to your project root.
+        # Single-repository compatibility. Set projects to enable session routing.
         repoRoot: 'D:/work/huanghao/aoci-code'
+        # projects:
+        #   - projectId: loan-information-boot
+        #     repoRoot: 'E:/work/huanghao/loan-information-boot'
+        #   - projectId: pinrong-online
+        #     repoRoot: 'E:/work/huanghao/pinrong-online'
         # Set false to disable the optional pre-write / compaction hooks.
         enableHooks: true
         # Set false to disable the MCP server registration.
