@@ -1,9 +1,10 @@
 import assert from 'node:assert/strict'
 import { cpSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { test } from 'node:test'
+import { fileURLToPath } from 'node:url'
 import { apply } from '../plugin/index.js'
 
-const SOURCE_REPO = process.env.AOCI_TEST_REPO ?? 'D:/aoci-code'
+const SOURCE_REPO = process.env.AOCI_TEST_REPO ?? fileURLToPath(new URL('..', import.meta.url))
 const HOOK_REPO = 'D:/aoci-hook-test'
 
 function prepareHookRepo() {
@@ -136,6 +137,6 @@ test('compaction hook injects the AOCI handoff', async () => {
   assert.equal(typeof handler, 'function')
   await handler({ id: 'session-test' }, { type: 'compaction/end' })
   assert.equal(injected.length, 1)
-  assert.match(injected[0].content[0].text, /AOCI context-compaction refresh/i)
+  assert.match(injected[0].content[0].text, /(?:AOCI context-compaction refresh|AOCI 上下文压缩后的认知刷新)/i)
   assert.equal(injected[0].source.kind, 'aoci-hook')
 })

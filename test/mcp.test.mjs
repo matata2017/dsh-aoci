@@ -1,9 +1,10 @@
 import assert from 'node:assert/strict'
 import { spawn } from 'node:child_process'
 import { test } from 'node:test'
+import { fileURLToPath } from 'node:url'
 
-const AOCI = 'D:/aoci-dsh/plugin/bin/aoci.exe'
-const REPO = 'D:/aoci-code'
+const AOCI = process.env.AOCI_TEST_BIN ?? fileURLToPath(new URL('../plugin/bin/aoci.exe', import.meta.url))
+const REPO = process.env.AOCI_TEST_REPO ?? fileURLToPath(new URL('..', import.meta.url))
 
 function request(method, params, id) {
   return `${JSON.stringify({ jsonrpc: '2.0', id, method, params })}\n`
@@ -42,7 +43,7 @@ test('aoci_rules is callable over MCP', async () => {
   await done
   child.kill()
   assert.equal(response.result.isError, undefined)
-  assert.match(response.result.content[0].text, /AOCI Runtime Contract/i)
+  assert.match(response.result.content[0].text, /AOCI (?:Runtime Contract|运行合同)/i)
 })
 
 test('aoci MCP server exposes the nine AOCI tools', async () => {
