@@ -3,7 +3,7 @@ import { cpSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { test } from 'node:test'
 import { apply } from '../plugin/index.js'
 
-const SOURCE_REPO = 'D:/aoci-code'
+const SOURCE_REPO = process.env.AOCI_TEST_REPO ?? 'D:/aoci-code'
 const HOOK_REPO = 'D:/aoci-hook-test'
 
 function prepareHookRepo() {
@@ -108,6 +108,20 @@ test('pre-write hook skips paths outside the repository (cross-drive)', async ()
   let nextCalls = 0
   const decision = await handler(
     { name: 'write', arguments: { file_path: 'C:/Users/666/.dsh/AGENTS.md' }, agent },
+    async () => { nextCalls += 1; return { kind: 'allow' } },
+  )
+  assert.deepEqual(decision, { kind: 'allow' })
+  assert.equal(nextCalls, 1)
+})
+
+test('pre-write hook skips a relative path from another repository', async () => {
+  const { agent, handlers } = makeAgent('D:/some-other-repo')
+  const { ctx } = makeContext(agent)
+  apply(ctx, { repoRoot: HOOK_REPO, enableMcp: false, enableHooks: true })
+  const handler = handlers.get('tools/pre-execute')
+  let nextCalls = 0
+  const decision = await handler(
+    { name: 'edit', arguments: { file_path: '.trellis/tasks/example/task.json' }, agent },
     async () => { nextCalls += 1; return { kind: 'allow' } },
   )
   assert.deepEqual(decision, { kind: 'allow' })

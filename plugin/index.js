@@ -12,19 +12,20 @@
 import { spawn } from 'node:child_process'
 import { appendFileSync, existsSync, mkdirSync } from 'node:fs'
 import { randomUUID } from 'node:crypto'
-import { isAbsolute, relative } from 'node:path'
+import { isAbsolute, relative, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const DEFAULT_REPO = 'D:/aoci-code'
 const DEFAULT_AOCI = fileURLToPath(new URL('./bin/aoci.exe', import.meta.url))
-const DEBUG_LOG = 'D:/aoci-dsh/aoci-debug.log'
 const MAX_TIMEOUT_MS = 600_000
 
 function debug(config, message) {
   if (config?.debug !== true) return
   try {
-    mkdirSync('D:/aoci-dsh', { recursive: true })
-    appendFileSync(DEBUG_LOG, `${new Date().toISOString()} ${message}\n`, 'utf8')
+    const repo = repoOf(config)
+    const log = resolve(repo, 'aoci-debug.log')
+    mkdirSync(repo, { recursive: true })
+    appendFileSync(log, `${new Date().toISOString()} ${message}\n`, 'utf8')
   } catch { /* diagnostics must never break the integration */ }
 }
 
@@ -105,8 +106,12 @@ function targetPath(args) {
   return undefined
 }
 
-function repoRelative(repo, filePath) {
-  const rel = isAbsolute(filePath) ? relative(repo, filePath) : filePath
+function repoRelative(repo, filePath, cwd) {
+  // Relative tool paths belong to the calling agent's cwd, not automatically to
+  // AOCI's configured repository. Resolve first so another checkout's path is not
+  // accidentally checked against this repository.
+  const absolute = isAbsolute(filePath) ? filePath : resolve(cwd ?? repo, filePath)
+  const rel = relative(repo, absolute)
   // On Windows, path.relative() returns the original absolute path when the two
   // paths are on different drives; AOCI refuses drive paths.
   if (rel === '' || rel.startsWith('..') || isAbsolute(rel)) return undefined
@@ -215,7 +220,7 @@ function mountHooks(ctx, config) {
         if (rawPath === undefined) return next()
         const repo = repoOf(config, agent)
         if (!existsSync(`${repo}/.aoci`) && !existsSync(`${repo}\\.aoci`)) return next()
-        const path = repoRelative(repo, rawPath)
+        const path = repoRelative(repo, rawPath, agent?.session?.header?.cwd)
         if (path === undefined) return next()
         const result = await runAoci([
           '--repo', repo,
