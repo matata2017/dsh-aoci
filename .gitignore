@@ -5,3 +5,7 @@ aoci-debug.log
 test/mcp-entry-result.json
 test/maintain.json
 test/mcp-update-result.json
+
+# AOCI agent host integration (machine-bound; do not commit)
+.codex/config.toml
+.codex/config.toml.backup.*

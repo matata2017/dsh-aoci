@@ -3,10 +3,10 @@
       name: '@local/dsh-aoci'
       config:
         # Repository AOCI should govern. Change this to your project root.
-        repoRoot: 'D:/aoci-code'
+        repoRoot: 'D:/work/huanghao/aoci-code'
         # Set false to disable the optional pre-write / compaction hooks.
         enableHooks: true
         # Set false to disable the MCP server registration.
         enableMcp: true
-        # Optional diagnostic log at D:/aoci-dsh/aoci-debug.log.
+        # Optional diagnostic log at D:/work/huanghao/aoci-code/aoci-debug.log.
         debug: true
