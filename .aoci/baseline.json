@@ -1,0 +1,111 @@
+{
+  "version": 1,
+  "created_at": "2026-11-23T01:29:47Z",
+  "updated_at": "2026-11-23T01:29:47Z",
+  "files": {
+    ".gitattributes": {
+      "role": "index",
+      "sha256": "21fa16a2122e2b0360b47502c577428b645437e08e9e87ffba661f84853cb476",
+      "size": 291,
+      "normalized_sha256": "21fa16a2122e2b0360b47502c577428b645437e08e9e87ffba661f84853cb476"
+    },
+    ".gitignore": {
+      "role": "index",
+      "sha256": "41eeb4a09c0f2dbec863e63fc3c118baa19acb609cb6f696bb1498dcc47c6b57",
+      "size": 108,
+      "normalized_sha256": "41eeb4a09c0f2dbec863e63fc3c118baa19acb609cb6f696bb1498dcc47c6b57"
+    },
+    "AGENTS.md": {
+      "role": "index",
+      "sha256": "ab7266ce23dc082964a0e0dd0ac755ec53497e2eb217607b3a04ca317627be3e",
+      "size": 14180,
+      "normalized_sha256": "ab7266ce23dc082964a0e0dd0ac755ec53497e2eb217607b3a04ca317627be3e"
+    },
+    "aoci.code.txt": {
+      "role": "index",
+      "sha256": "12cbc237b863041b3ab7b6c6330091964cb014a20e624ec1f88de6056aed56c2",
+      "size": 21,
+      "normalized_sha256": "12cbc237b863041b3ab7b6c6330091964cb014a20e624ec1f88de6056aed56c2"
+    },
+    "aoci.meta.txt": {
+      "role": "index",
+      "sha256": "5ccd06dd2198435423141174e4f3eaed7e7645644070e0b5cc2e20dbc889172a",
+      "size": 2187,
+      "normalized_sha256": "5ccd06dd2198435423141174e4f3eaed7e7645644070e0b5cc2e20dbc889172a"
+    },
+    "aoci.txt": {
+      "role": "index",
+      "sha256": "6224fef874fc8a219e9fc28f614de3574a504e503e070b746c58b3d6805128fc",
+      "size": 298,
+      "normalized_sha256": "6224fef874fc8a219e9fc28f614de3574a504e503e070b746c58b3d6805128fc"
+    }
+  },
+  "managed_scope": {
+    "version": "managed-scope-baseline/v1",
+    "policy_identity": "e0f548d87fe5462c412a1c54409871a60ddf2ae5c30609258ff8739fdfcc8e76",
+    "observe_change_policy": "review_required",
+    "budget_policy_identity": "15e9b37a6c57e9bf03c9df3d0d049eb5b9a7f5540f9d34960408114e2538a32d",
+    "budget_policy": {
+      "version": "cognition-budget-policy/v1",
+      "mode": "enforce",
+      "whole_index": {
+        "target_tokens": 200000,
+        "warning_tokens": 300000,
+        "max_tokens": 400000
+      },
+      "r": [
+        {
+          "min_c": 1,
+          "max_c": 4,
+          "target_tokens": 25,
+          "max_tokens": 50
+        },
+        {
+          "min_c": 5,
+          "max_c": 7,
+          "target_tokens": 45,
+          "max_tokens": 90
+        },
+        {
+          "min_c": 8,
+          "max_c": 8,
+          "target_tokens": 70,
+          "max_tokens": 140
+        },
+        {
+          "min_c": 9,
+          "max_c": 9,
+          "target_tokens": 90,
+          "max_tokens": 180
+        }
+      ],
+      "s": [
+        {
+          "min_c": 1,
+          "max_c": 4,
+          "target_tokens": 20,
+          "max_tokens": 40
+        },
+        {
+          "min_c": 5,
+          "max_c": 7,
+          "target_tokens": 40,
+          "max_tokens": 80
+        },
+        {
+          "min_c": 8,
+          "max_c": 8,
+          "target_tokens": 70,
+          "max_tokens": 140
+        },
+        {
+          "min_c": 9,
+          "max_c": 9,
+          "target_tokens": 100,
+          "max_tokens": 200
+        }
+      ]
+    },
+    "apply_authorization_mode": "auto"
+  }
+}
