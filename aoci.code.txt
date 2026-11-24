@@ -5,12 +5,12 @@
 .gitignore[OC3T]: F:Ignore runtime diagnostics, test results and machine-local Codex MCP configuration | R:- | A:Git ignore patterns | S:-
 AGENTS.md[SQ7S]: F:Define the repository AOCI cognition, delivery, and maintenance workflow | R:code:plugin/index.js | A:Agent instructions for rules, overview, and maintenance | S:Fresh authoring and recovery follow the current machine Guide; a compacted summary is not a valid Whole-Index receipt.
 INSTALL.md[SV5T]: F:Document installation, repository initialization and verification of the DSH bundle | R:code:plugin/cordis.patch.yml | A:Local bundle installation and CLI examples | S:-
-README.md[SG5T]: F:Describe the DSH integration, shipped binary, hooks and test entry points | R:code:plugin/index.js,code:plugin/cordis.patch.yml | A:Integration overview and build provenance | S:-
+README.md[SG5S]: F:说明 AOCI DSH 集成的安装、会话绑定、工具、验证和构建来源 | R:code:plugin/README.md,code:plugin/cordis.patch.yml,code:plugin/index.js | A:自动绑定、固定目录、显式项目配置 | S:状态探测可能追加 AOCI 审计记录。
 
 ===/<repository>/plugin/===
-README.md[SE6T]: F:Explain bundle setup and how a session selects one configured AOCI project at a time | R:code:plugin/cordis.patch.yml,code:plugin/index.js | A:Project configuration and tool usage | S:-
-cordis.patch.yml[FC7T]: F:Register the local AOCI bundle with a single-repository default and a multi-project configuration example | R:code:plugin/index.js | A:Bundle insertion, repoRoot, projects and feature flags | S:-
-index.js[AE9L]: F:Mount AOCI CLI, MCP and hooks with repository-bound dispatch and session project selection | R:code:plugin/cordis.patch.yml,code:test/multi-project.test.mjs | A:apply, aoci, aoci_project and MCP dispatch guards | S:Multi-project explicit selection gates MCP dispatch independently of optional write and compaction hooks. Each server is pinned to one root. Projects without local index assets are not registered. CLI entry updates are preview-only in multi-project mode.
+README.md[SE6T]: F:说明默认会话自动绑定、固定目录及显式项目选择的使用方法 | R:code:plugin/cordis.patch.yml,code:plugin/index.js | A:插件安装、aoci status、MCP 工具前缀 | S:使用状态输出中的 MCP server key，并将游标、收据和批次保留在原项目。
+cordis.patch.yml[FC7T]: F:挂载本地 AOCI 插件并提供固定目录与项目清单的配置示例 | R:code:plugin/index.js | A:插件插入、repoRoot、projects、enableHooks、enableMcp、debug | S:默认不配置 repoRoot 和 projects，且未设置 AOCI_REPO 时按会话工作目录自动绑定。
+index.js[AE9L]: F:提供 AOCI CLI、每仓 MCP 实例、会话目录绑定和宿主钩子 | R:code:plugin/cordis.patch.yml,code:test/plugin.test.mjs,code:test/multi-project.test.mjs | A:apply、aoci status、aoci_project、MCP 派发 | S:无 projects 时优先使用 repoRoot，其次 AOCI_REPO，否则从有效会话目录向上查找；不完整子项目阻止继承父索引。MCP 进程绑定单一仓库并按规范路径复用；写入受会话绑定和仓库回执校验约束。状态探针可追加审计记录。
 package.json[FV6T]: F:Declare the local ESM bundle, its exported entry and packaged assets | R:code:plugin/index.js,code:plugin/cordis.patch.yml | A:DSH bundle manifest | S:-
 
 ===/<repository>/plugin/bin/===
@@ -22,5 +22,5 @@ DETAIL.md[SE4T]: F:Describe the bundle registration and hook behavior for the si
 ===/<repository>/test/===
 mcp.test.mjs[TQ5T]: F:Exercise the bundled AOCI MCP stdio handshake, rules call and tool list | R:code:plugin/bin/BUILD.txt | A:Node test runner MCP checks | S:-
 multi-project.test.mjs[TQ7S]: F:Verify session project switching, MCP repository binding and write hook isolation | R:code:plugin/index.js | A:Node dual-repository regression tests | S:Disposable fixtures assert real MCP receipt roots and pretool output, including stale denial in the selected repository and dispatch denial across projects.
-plugin.test.mjs[TQ6S]: F:Test CLI registration, legacy MCP wiring, file-route guards and compaction against local fixtures | R:code:plugin/index.js | A:Node test runner integration checks | S:The stale-entry test creates a real code-volume entry in a disposable fixture before inducing source drift.
+plugin.test.mjs[TQ6S]: F:验证 AOCI CLI、按需注册、错绑拒写、未绑定和文件钩子 | R:code:plugin/index.js | A:Node 回归测试 | S:用错误的 MCP 根目录回执验证拒写；用临时索引条目与真实 CLI 验证过期文件写前阻断。
 run-mcp-entry.mjs[XQ4T]: F:Drive a manual stdio maintenance and update check for a prepared single-candidate repository | R:- | A:Repository and output path command-line arguments | S:This helper expects one test candidate and applies an actual entry update.

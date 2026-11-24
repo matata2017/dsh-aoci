@@ -15,7 +15,9 @@ It exposes AOCI-CODE through four surfaces:
 plugin_manager install_bundle "D:/work/huanghao/aoci-code/plugin"
 ```
 
-Edit the plugin's `config` in `cordis.patch.yml` or in the Plugins page. A single `repoRoot` keeps the existing `mcp__aoci__*` tools. To switch between projects within one session, configure `projects`:
+Open a project in DSH and call `aoci` with `{"command":"status"}`. By default the plugin finds the nearest AOCI project above the session's working directory, including projects without Git. Status shows the target directory, the root reported by MCP, and the server key to use as `mcp__<serverKey>__`. A directory change is checked before the next AOCI call. A mismatched receipt blocks AOCI writes. Status may append an audit record.
+
+Set an absolute `repoRoot` to pin the project. It takes precedence over `AOCI_REPO`. Existing `projects` configurations still support explicit session selection:
 
 ```yaml
 projects:
@@ -37,7 +39,7 @@ Each project has its own MCP process and index. Roots must be absolute and disti
 aoci status
 ```
 
-or call `mcp__aoci__aoci_header` / `mcp__aoci__aoci_rules` in a DSH session.
+In DSH, use the server key reported by status to find that project's `aoci_header` and `aoci_rules` tools. Start with status after moving to a project to discover its MCP tools.
 
 ## Notes
 

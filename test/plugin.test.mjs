@@ -83,15 +83,50 @@ test('aoci CLI tool is registered and can run status', async () => {
   assert.match(result.stdout, /"index_entries"/)
 })
 
-test('MCP manager receives a stdio AOCI registration', () => {
-  const { agent } = makeAgent(SOURCE_REPO)
-  const { ctx, mcp } = makeContext(agent)
-  apply(ctx, { repoRoot: SOURCE_REPO, enableMcp: true, enableHooks: false })
+test('first status lazily registers MCP and rejects writes on a wrong receipt root', async () => {
+  const { agent, handlers } = makeAgent(SOURCE_REPO)
+  const { ctx, mcp, tools } = makeContext(agent)
+  const repoRoot = realpathSync(SOURCE_REPO)
+  let actualRoot = repoRoot
+  ctx.tools.get = name => mcp.some(server => name === `mcp__${server.name}__aoci_overview`)
+  ctx.tools.execute = async () => ({ results: [{ result: {
+    isError: false,
+    content: [{ type: 'text', text: JSON.stringify({ cognition_receipt: { runtime_repository_root: actualRoot } }) }],
+  } }] })
+  apply(ctx, { repoRoot, enableMcp: true, enableHooks: false })
+  assert.equal(mcp.length, 0)
+  const status = () => tools[0].execute({ command: 'status' }, { agent })
+  const first = await status()
+  assert.equal(first.binding.status, 'bound')
   assert.equal(mcp.length, 1)
-  assert.equal(mcp[0].name, 'aoci')
+  assert.match(mcp[0].name, /^aoci_auto_[0-9a-f]{20}$/)
   assert.equal(mcp[0].entry.transport, 'stdio')
-  assert.match(mcp[0].entry.command, /aoci\.exe$/)
-  assert.deepEqual(mcp[0].entry.args, ['--repo', SOURCE_REPO, 'mcp'])
+  assert.deepEqual(mcp[0].entry.args, ['--repo', repoRoot, 'mcp'])
+
+  actualRoot = HOOK_REPO
+  const mismatch = await status()
+  assert.equal(mismatch.binding.status, 'mismatch')
+  assert.equal(mismatch.binding.actualRoot, HOOK_REPO)
+  assert.equal(mismatch.exitCode, 1)
+  const denied = await handlers.get('tools/pre-execute')(
+    { name: `mcp__${mcp[0].name}__aoci_update_entry`, arguments: {}, agent },
+    async () => assert.fail('mismatched MCP write was dispatched'),
+  )
+  assert.equal(denied.kind, 'deny')
+  await assert.rejects(tools[0].execute({ command: 'scan' }, { agent }), /binding mismatch/)
+})
+
+test('an incomplete nested AOCI project does not bind to its parent', async () => {
+  const nested = join(HOOK_REPO, 'nested')
+  mkdirSync(join(nested, '.aoci'), { recursive: true })
+  const { agent } = makeAgent(nested)
+  const { ctx, mcp, tools } = makeContext(agent)
+  apply(ctx, { enableHooks: false })
+  const result = await tools[0].execute({ command: 'status' }, { agent })
+  assert.equal(result.binding.mode, 'auto')
+  assert.equal(result.binding.status, 'unbound')
+  assert.equal(result.binding.repoRoot, null)
+  assert.equal(mcp.length, 0)
 })
 
 test('pre-write hook blocks a stale AOCI entry with a deny decision', async () => {

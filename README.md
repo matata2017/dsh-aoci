@@ -44,18 +44,19 @@ plugin_manager remove_bundle "@local/dsh-aoci"
 
 配置文件是 `plugin/cordis.patch.yml`，也可以在 DSH 的 Plugins 页面改 `@local/dsh-aoci` 的配置。
 
-### 单仓库（默认）
+### 按会话自动绑定（默认）
 
-当前默认指向仓库自身：
+省略 `repoRoot` 和 `projects`。插件从会话当前工作目录向上查找 AOCI 项目根目录，无需 `.git`。进入同一项目的子目录时复用绑定，切到另一个项目时在下次调用前重新绑定。带有不完整 AOCI 资产的子项目会显示未绑定，避免使用父项目的索引。
+
+打开项目后调用 `aoci status`（`{"command":"status"}`），核对会话目录、绑定模式、目标 `repoRoot` 和 MCP 回执的实际仓库根。随后使用输出的 MCP server key 对应的工具。根目录不匹配时，插件阻止 AOCI 写入。状态探测可能追加 AOCI 审计日志。
+
+如需固定项目，在插件配置中填写一个绝对路径：
 
 ```yaml
-repoRoot: 'D:/work/huanghao/aoci-code'
-enableHooks: true
-enableMcp: true
-debug: true
+repoRoot: 'E:/work/huanghao/pinrong-online'
 ```
 
-`repoRoot` 决定三件事：MCP server 用哪个仓库启动、`aoci` CLI 默认操作哪个仓库、写文件 hook 用哪个仓库的索引判断 stale。
+`repoRoot` 优先于 `AOCI_REPO`。两者都未设置时才使用自动绑定。
 
 ### 多项目（一个会话内切换）
 
@@ -114,7 +115,7 @@ node --test test/*.test.mjs
 
 覆盖：MCP 握手与 9 工具可见性、CLI 工具、多项目会话路由、MCP manager 注册参数、pre-write stale 拒绝、跨盘/跨仓路径跳过、compaction 注入。
 
-当前结果（2026-11-24）：10 项中 9 项通过。唯一失败是 `aoci CLI tool is registered and can run status`：本仓库索引已填充为 15 条，但多项目功能给 status 加了 project binding 校验，旧测试断言 `exitCode=0` 尚未随新语义更新。这属于过期断言，不影响运行时 MCP 与 hook。
+当前结果（2026-11-24）：10 项中 9 项通过。唯一失败是 `aoci CLI tool is registered and can run status`，原因待查。已确认的事实：直接运行 `./bin/aoci.exe --repo D:/work/huanghao/aoci-code status --json` 返回 `exitCode=0`（`index_entries: 15`），但经插件的 `aoci` 工具以同样参数调用时返回 `exitCode=3` 且输出 `error_code: "config"`。多项目会话路由与 hook 的相关测试均通过，运行时 MCP 与 hook 可用。
 
 运行时可看 `aoci-debug.log`：
 

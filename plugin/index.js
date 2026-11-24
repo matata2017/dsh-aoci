@@ -272,7 +272,6 @@ function projectTool(registry) {
 function sessionBindings(ctx, config) {
   const sessions = new WeakMap()
   const servers = new Map()
-  const probes = new Set()
   let manager
   if (config?.enableMcp !== false) {
     ctx.inject(['mcpManager'], scope => {
@@ -299,7 +298,7 @@ function sessionBindings(ctx, config) {
           if (mode === 'fixed') repoRoot = root
           else for (let path = root; ; path = resolve(path, '..')) {
             if (isInitialized(path)) { repoRoot = path; break }
-            // An incomplete nested project must not fall through to its parent.
+            // A nested project with incomplete metadata cannot inherit its parent's index.
             if (existsSync(resolve(path, 'aoci.txt')) || existsSync(resolve(path, '.aoci'))) break
             if (resolve(path, '..') === path) break
           }
@@ -316,10 +315,15 @@ function sessionBindings(ctx, config) {
     return binding
   }
 
-  async function verify(agent, signal) {
+  async function verify(agent, signal, refresh = false) {
     const binding = resolveBinding(agent)
     const { repoRoot } = binding
-    if (!repoRoot || !isInitialized(repoRoot) || !manager) return binding
+    if (!repoRoot || !isInitialized(repoRoot) || !manager) {
+      binding.actualRoot = null
+      binding.status = repoRoot && isInitialized(repoRoot) ? 'unavailable' : 'unbound'
+      return binding
+    }
+    if (!refresh && binding.status === 'bound') return binding
     const identity = rootKey(repoRoot)
     let server = servers.get(identity)
     try {
@@ -339,17 +343,10 @@ function sessionBindings(ctx, config) {
       while (!ctx.tools.get(name, agent)) {
         await delay(25, undefined, { signal: probeSignal })
       }
-      const id = randomUUID()
-      probes.add(id)
-      let result
-      try {
-        const { results } = await ctx.tools.execute({ agent, signal: probeSignal, calls: [{
-          type: 'tool_call', id, name, arguments: JSON.stringify({ check_only: true }),
-        }] })
-        result = results[0]?.result
-      } finally {
-        probes.delete(id)
-      }
+      const { results } = await ctx.tools.execute({ agent, signal: probeSignal, calls: [{
+        type: 'tool_call', id: randomUUID(), name, arguments: JSON.stringify({ check_only: true }),
+      }] })
+      const result = results[0]?.result
       if (!result || result.isError) throw new Error(result?.error?.message ?? 'MCP overview failed')
       const payload = JSON.parse(result.content.find(item => item.type === 'text').text)
       const actual = payload.assessment?.cognition_receipt?.runtime_repository_root
@@ -362,10 +359,11 @@ function sessionBindings(ctx, config) {
       binding.status = 'unavailable'
       ctx.logger?.warn?.(`aoci: ${error.message}`)
     }
-    return resolveBinding(agent)
+    if (resolveBinding(agent) !== binding) throw new Error('AOCI project changed during verification. Retry in the current project.')
+    return binding
   }
 
-  return { resolve: resolveBinding, verify, isProbe: exec => probes.has(exec.callId) && exec.name.endsWith('__aoci_overview') && exec.arguments?.check_only === true }
+  return { resolve: resolveBinding, verify }
 }
 
 function bindingText(binding) {
@@ -433,12 +431,20 @@ function aociTool(config, registry, sessions) {
         if (!/^[a-z][a-z-]*$/.test(input.command) || options.some(arg => /^--repo(?:=|$)/.test(arg))) {
           throw new Error('aoci: --repo is owned by session binding')
         }
-        binding = await sessions.verify(exec.agent, exec.signal, input.command === 'status')
+        const subcommands = readSubcommands.get(input.command)
+        const readOnly = readCommands.has(input.command) || (subcommands?.includes(options[0])
+          && (input.command !== 'index' || options[0] !== 'agent' || options[1] === 'guide'))
+        binding = await sessions.verify(exec.agent, exec.signal, input.command === 'status' || !readOnly)
         if (input.command !== 'status' && binding.status === 'mismatch') {
           throw new Error('aoci: repository binding mismatch. Run aoci status before proceeding.')
         }
+        if (!readOnly && config?.enableMcp !== false && binding.status === 'unavailable') {
+          throw new Error('aoci: MCP repository binding could not be verified. Run aoci status before writing.')
+        }
         repo = binding.repoRoot ?? (input.command === 'init' && binding.mode === 'auto' ? binding.cwd : null)
-        if (!repo && input.command === 'status') return { exitCode: 1, stdout: '', stderr: '', timedOut: false, binding: { ...binding } }
+        if (input.command === 'status' && (!repo || binding.status === 'mismatch')) {
+          return { exitCode: 1, stdout: '', stderr: '', timedOut: false, binding: { ...binding } }
+        }
         if (!repo) throw new Error('aoci: no project bound. Open a project directory and run aoci status, or initialize it with init --here.')
       }
       if (registry) {
@@ -514,10 +520,23 @@ function mountMcp(ctx, config, registry) {
   })
 }
 
-function mountHooks(ctx, config, registry) {
+function mountHooks(ctx, config, registry, sessions) {
   const attach = agent => {
     if (agent?.ctx === undefined) return
     ctx.effect(() => agent.ctx.on('tools/pre-execute', async (exec, next) => {
+      if (sessions && /^mcp__aoci(?:_|__)/.test(exec.name)) {
+        const binding = sessions.resolve(agent)
+        if (!binding.serverKey || !exec.name.startsWith(`mcp__${binding.serverKey}__`)) {
+          return { kind: 'deny', reason: 'AOCI tool belongs to another project or the session is unbound. Run aoci status.' }
+        }
+        // The status probe itself goes through this hook. Its namespace is checked above.
+        if (exec.name.endsWith('__aoci_overview') && exec.arguments?.check_only === true) return next()
+        const verified = await sessions.verify(agent, exec.signal, true)
+        if (verified !== binding || verified.status !== 'bound') {
+          return { kind: 'deny', reason: 'AOCI repository binding is not verified. Run aoci status.' }
+        }
+        return next()
+      }
       if (registry && /^mcp__aoci(?:_|__)/.test(exec.name)) {
         const project = selectedProject(registry, agent)
         if (!project?.mcp || !exec.name.startsWith(`mcp__${project.serverKey}__`)
@@ -531,9 +550,10 @@ function mountHooks(ctx, config, registry) {
         if (!looksLikeWriteTool(exec?.name)) return next()
         const rawPath = targetPath(exec?.arguments)
         if (rawPath === undefined) return next()
-        const cwd = agent.session?.header?.cwd
-        if (registry && !isAbsolute(rawPath) && !cwd) return next()
-        const target = registry ? physicalPath(isAbsolute(rawPath) ? rawPath : resolve(cwd, rawPath)) : rawPath
+        const binding = sessions?.resolve(agent)
+        const cwd = binding?.cwd ?? agent.session?.header?.cwd
+        if (!isAbsolute(rawPath) && !cwd) return next()
+        const target = physicalPath(isAbsolute(rawPath) ? rawPath : resolve(cwd, rawPath))
         const project = registry && projectForPath(registry, target)
         if (registry && !project) return next()
         const selection = selectedProject(registry, agent)
@@ -541,10 +561,11 @@ function mountHooks(ctx, config, registry) {
           return { kind: 'deny', reason: `AOCI target belongs to ${project.projectId}. Select it before editing.` }
         }
         if (project && (project.enableHooks === false || !isInitialized(project.repoRoot))) return next()
-        const repo = project?.repoRoot ?? legacyRepo(config, agent)
-        if (!existsSync(resolve(repo, '.aoci'))) return next()
+        const repo = sessions ? binding.repoRoot : project?.repoRoot
+        if (!repo || !existsSync(resolve(repo, '.aoci'))) return next()
         const path = repoRelative(repo, target, cwd)
         if (path === undefined) return next()
+        if (binding?.status === 'mismatch') return { kind: 'deny', reason: 'AOCI repository binding mismatch. Run aoci status.' }
         const result = await runAoci([
           '--repo', repo,
           'hook', 'pretool',
@@ -575,11 +596,17 @@ function mountHooks(ctx, config, registry) {
 
     ctx.effect(() => agent.ctx.on('session/event', async (session, event) => {
       try {
+        if (sessions && event?.type === 'working-directory/change') {
+          sessions.resolve(agent)
+          return
+        }
         if (event?.type !== 'compaction/end' && event?.type !== 'compaction/summary') return
         if (config?.enableHooks === false || agent.session?.header?.origin === 'subagent') return
         const project = selectedProject(registry, agent)
         if (registry && (!project?.mcp || project.enableHooks === false || !isInitialized(project.repoRoot))) return
-        const repo = project?.repoRoot ?? legacyRepo(config, agent)
+        const binding = sessions?.resolve(agent)
+        const repo = binding?.repoRoot ?? project?.repoRoot
+        if (!repo || !isInitialized(repo) || binding?.status === 'mismatch') return
         const result = await runAoci(['--repo', repo, 'hook', 'codex-compact'], {
           cwd: repo,
           timeoutMs: 20_000,
@@ -610,9 +637,10 @@ export const inject = ['tools', 'agents']
 
 export function apply(ctx, config) {
   const registry = projectRegistry(config)
+  const sessions = registry ? undefined : sessionBindings(ctx, config)
   if (registry) ctx.effect(() => ctx.tools.register(projectTool(registry)), 'AOCI project selection')
   ctx.effect(() => {
-    const dispose = ctx.tools.register(aociTool(config, registry))
+    const dispose = ctx.tools.register(aociTool(config, registry, sessions))
     debug(config, 'aoci CLI tool registered')
     try {
       const names = ctx.tools.definitions?.().map(definition => definition.name).filter(name => name === 'aoci')
@@ -622,6 +650,6 @@ export function apply(ctx, config) {
     }
     return dispose
   }, 'aoci CLI tool')
-  mountHooks(ctx, config, registry)
-  mountMcp(ctx, config, registry)
+  mountHooks(ctx, config, registry, sessions)
+  if (registry) mountMcp(ctx, config, registry)
 }

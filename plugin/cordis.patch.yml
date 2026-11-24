@@ -2,8 +2,8 @@
     - id: aoci
       name: '@local/dsh-aoci'
       config:
-        # Single-repository compatibility. Set projects to enable session routing.
-        repoRoot: 'D:/work/huanghao/aoci-code'
+        # Omit repoRoot to follow each session's working directory.
+        # repoRoot: 'D:/work/huanghao/aoci-code'
         # projects:
         #   - projectId: loan-information-boot
         #     repoRoot: 'E:/work/huanghao/loan-information-boot'
